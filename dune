@@ -1,0 +1,21 @@
+; (rule
+;  (target day1.test.output)
+;  (deps examples/day1.txt)
+;  (action
+;    (with-stdout-to %{target} (run ./bin/day1.exe %{deps}))))
+
+; (rule
+;  (alias runtest)
+;  (action (diff day1.test.output examples/day1.output)))
+
+(include dune.inc)
+
+(rule
+ (deps (source_tree .))
+ (action
+  (with-stdout-to dune.inc.gen
+  (run gen/gen.exe))))
+
+(rule
+ (alias runtest)
+ (action (diff dune.inc dune.inc.gen)))

@@ -9,7 +9,7 @@
 
 (maintainers "Maintainer Name")
 
-(license LICENSE)
+(license BSD-3)
 
 (documentation https://github.com/jaaron/aoc2024)
 
@@ -18,6 +18,4 @@
  (synopsis "Advent of Code 2024")
  (description "Advent of Code 2024")
  (allow_empty)
- (depends ocaml dune core))
-
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
+ (depends ocaml dune core ppx_deriving))

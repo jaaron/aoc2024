@@ -31,3 +31,11 @@
     (alias runtest)
     (action (diff day4.test.output examples/day4.output)))
     
+(rule
+    (target day5.test.output)
+    (deps examples/day5.txt)
+    (action (with-stdout-to %{target} (run bin/day5.exe %{deps}))))
+(rule
+    (alias runtest)
+    (action (diff day5.test.output examples/day5.output)))
+    

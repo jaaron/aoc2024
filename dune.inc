@@ -63,3 +63,11 @@
     (alias runtest)
     (action (diff day8.test.output examples/day8.output)))
     
+(rule
+    (target day9.test.output)
+    (deps examples/day9.txt)
+    (action (with-stdout-to %{target} (run bin/day9.exe %{deps}))))
+(rule
+    (alias runtest)
+    (action (diff day9.test.output examples/day9.output)))
+    

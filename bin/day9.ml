@@ -56,72 +56,47 @@ let part_a () =
 ;;
 
 let filewise_compact m =
-    let (fspecs,free) = Array.foldi m ~init:(true,0,0,[],[])
-                            ~f:(fun idx (inuse,start,fid,fids,free) -> function
-                                   | Some fid' -> (if inuse
-                                                 then (if fid = fid'
-                                                       then (inuse,start,fid,fids,free)
-                                                       else (inuse,idx,fid',(start,idx - start,fid)::fids, free))
-                                                 else (true,idx,fid',fids,(start,idx-start)::free))
-                                   | None -> (if inuse
-                                              then (false,idx,fid,(start,idx-start,fid)::fids, free)
-                                              else (false,start,fid,fids,free)))
-                        |> fun (inuse,start,fid,fids,free) ->
-                        let fids = if inuse then (start, (Array.length m) - start, fid)::fids else fids in
-                        (fids,List.rev free) in
-    let rec set start len fid =
-        if len <= 0
-        then ()
+    let rec check_space cnt start =
+        if cnt = 0
+        then true
+        else if start >= Array.length m
+        then false
+        else match m.(start) with
+        | Some _ -> false
+        | None   -> check_space (cnt-1) (start + 1) in
+    let rec find_space ~cnt ~max start =
+        if start >= max then None
+        else
+        match m.(start) with
+        | Some _ -> find_space ~cnt ~max (start + 1)
+        | None   -> (if check_space cnt start
+                     then Some start
+                     else find_space ~cnt ~max (start + 1)) in
+    let rec relocate start_loc end_loc space_start =
+        if start_loc > end_loc then ()
         else (
-            m.(start) <- Some fid;
-            set (start + 1) (len-1) fid
+            m.(space_start) <- m.(start_loc);
+            m.(start_loc) <- None;
+            relocate (start_loc + 1) end_loc (space_start + 1)
         ) in
-    let rec clear start len =
-        if len <=  0
-        then ()
-        else (
-            m.(start) <- None;
-            clear (start + 1) (len-1)
-        ) in
-    let rec insert (start,len) acc = function
-        | [] -> List.rev ((start,len)::acc)
-        | (x,n)::[] -> (
-                if start + len = x
-                then List.rev ((start, len + n)::acc)
-                else if x + n = start
-                then List.rev ((x, len+n)::acc)
-                else if start < x
-                then List.rev ((x,n)::(start,len)::acc)
-                else List.rev ((start,len)::(x,n)::acc))
-        | (x,n)::(y,m)::rest ->
-            if start + len < x
-            then List.rev_append ((start,len)::acc) ((x,n)::(y,m)::rest)
-            else if start + len = x
-            then List.rev_append ((start,len+n)::acc) ((y,m)::rest)
-            else if start = x + n
-            then (if start + len = y
-                  then List.rev_append ((x,n + len + m)::acc ) rest
-                  else List.rev_append ((x,n+len)::acc) ((y,m)::rest))
-            else insert (start,len) ((x,n)::acc) ((y,m)::rest) in
-    let rec relocate (start,len,fid) acc = function
-        | [] -> List.rev acc
-        | (f_start,f_len)::free ->
-            if f_start > start
-            then List.rev acc
-            else if f_len < len
-            then relocate (start,len,fid) ((f_start,f_len)::acc) free
-            else (
-                set f_start len fid;
-                clear start len;
-                let free = insert (start,len) [] free in
-                let acc  = if f_len = len then acc else (f_start + len, f_len - len)::acc in
-                List.rev_append acc free
-            ) in
-    let rec helper free = function
-        | [] -> m
-        | fspec::fs -> helper (relocate fspec [] free) fs in
-    helper free fspecs
-;;
+    let rec helper cur head =
+        if head <= 0 then m
+        else
+        match cur,m.(head) with
+        | None, None             -> helper None (head-1)
+        | None, Some _           -> helper (Some head) (head-1)
+        | Some end_loc, None     -> (find_space ~cnt:(end_loc - head) ~max:head 0
+                                     |> Option.map ~f:(relocate (head+1) end_loc)
+                                     |> Option.value ~default:();
+                                     helper None head)
+        | Some end_loc, Some fid -> (if (m.(end_loc) |> Option.value_exn) = fid
+                                     then helper cur (head-1)
+                                     else (find_space ~cnt:(end_loc - head) ~max:head 0
+                                           |> Option.map ~f:(relocate (head+1) end_loc)
+                                           |> Option.value ~default:();
+                                           helper (Some head) (head-1)))
+    in
+    helper None ((Array.length m)-1)
                                                  
 let part_b () =
     (Sys.get_argv ()).(1)

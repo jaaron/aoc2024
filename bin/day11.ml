@@ -15,14 +15,6 @@ let split_digits n = let s = Int.to_string n in
   (Int.of_string s0, Int.of_string s1)
 ;;
 
-let step_stone acc = function
-  | (Stone 0) -> (Stone 1)::acc
-  | (Stone n) -> (if (nr_digits n) mod 2 = 0
-                  then let (s1,s2) = split_digits n in
-                    (Stone s2)::(Stone s1)::acc
-                  else (Stone (n*2024))::acc)
-;;
-
 module IntPair = struct
   type t = (int * int) [@@deriving eq,sexp];;
   let hash (x,y) = x*y;;
@@ -47,40 +39,18 @@ let rec count_stones_after =
                    k0 + k1
                  else count_stones_after (steps-1) (Stone (n*2024))) in
         Hashtbl.set cache ~key:(steps,n) ~data:k;
-        k;;
-                   
-let step_all_stones l =
-  List.fold_left ~init:[] ~f:step_stone l
-  |> List.rev
-;;
+        k;;                   
 
-let rec multi_step_all_stones n l =
-  if n = 0 then l
-  else step_all_stones l
-       |> multi_step_all_stones (n-1)
-;;
-
-let sum_stones =
-  List.fold_left ~init:0 ~f:(fun acc (Stone s) -> acc + s)
-;;
-let _ = sum_stones;;
-
-let part_a () =
-  (Sys.get_argv ()).(1)
-  |> read_input
-  |> multi_step_all_stones 25
-  |> List.length
-  |> printf "After %d steps there are %d stones\n" 25
-;;
-
-
-let part_b () =
+let solve n =
   (Sys.get_argv ()).(1)
   |> read_input
   |> List.fold_left ~init:0 ~f:(fun acc stone ->
-      acc + (count_stones_after 75 stone))
-  |> printf "After 75 steps there are %d stones\n"
+      acc + (count_stones_after n stone))
+  |> printf "After %d steps there are %d stones\n" n
 ;;
+
+let part_a () = solve 25;;
+let part_b () = solve 75;;
 
 part_a ();;
 part_b ();;

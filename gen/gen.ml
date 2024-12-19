@@ -13,11 +13,12 @@ let generate_rules base =
 ;;
 
 let () =
-  Sys.readdir "bin"
+  Sys.readdir "examples"
   |> Array.to_list
   |> List.sort String.compare
   |> List.filter_map (fun s -> try
-                         Scanf.sscanf s "day%d.ml" (fun d -> Some (Printf.sprintf "day%d" d))
+                         Scanf.sscanf s "day%d.output"
+                           (fun d -> Some (Printf.sprintf "day%d" d))
                        with _ -> None)
   |> List.iter generate_rules
 ;;
